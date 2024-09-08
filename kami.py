@@ -1,8 +1,6 @@
 import json
 import requests
-from Crypto.Cipher import AES
-import base64
-import hashlib
+
 import end
 from datetime import datetime
 
@@ -11,72 +9,6 @@ class ZaloAPI:
         self.authDomain = api_domain
         self.apiType = api_type
         self.apiVersion = api_version
-
-    def get_encrypt_key(self, imei):
-        return hashlib.md5(imei.encode()).digest()
-
-    def encode_aes(self, key, data):
-        cipher = AES.new(key, AES.MODE_ECB)
-        encoded = base64.b64encode(cipher.encrypt(self.pad(data)))
-        return encoded.decode('utf-8')
-
-    def decode_aes(self, key, encoded_data):
-        cipher = AES.new(key, AES.MODE_ECB)
-        decoded = self.unpad(cipher.decrypt(base64.b64decode(encoded_data)))
-        return decoded.decode('utf-8')
-
-    def pad(self, s):
-        block_size = AES.block_size
-        return s + (block_size - len(s) % block_size) * chr(block_size - len(s) % block_size)
-
-    def unpad(self, s):
-        return s[:-ord(s[len(s) - 1:])]
-
-    def get_sign_key(self, data):
-        return hashlib.sha256(data.encode()).hexdigest()
-
-    async def encrypt_param(self, params, imei):
-        encrypted_params = self._encrypt_param(params, imei)
-        if encrypted_params:
-            return {
-                'params': {
-                    **encrypted_params['encrypted_params'],
-                    'params': encrypted_params['encrypted_data'],
-                    'type': self.apiType,
-                    'client_version': self.apiVersion,
-                    'signkey': self.get_sign_key(encrypted_params['encrypted_data'])
-                },
-                'enk': encrypted_params['enk']
-            }
-        return {'params': params, 'enk': None}
-
-    def _encrypt_param(self, params, imei):
-        try:
-            key = self.get_encrypt_key(imei)
-            encrypted_data = self.encode_aes(key, json.dumps(params))
-            return {
-                'encrypted_data': encrypted_data,
-                'encrypted_params': {'imei': imei},
-                'enk': key
-            }
-        except Exception as e:
-            print("Error during encryption:", e)
-            return None
-
-    async def decrypt_resp(self, enk, response):
-        if not enk:
-            return response
-        try:
-            decoded_data = self.decode_aes(enk, response['data']['data'])
-            response['data'] = json.loads(decoded_data)
-        except Exception as e:
-            print("Error during decryption:", e)
-            response['data'] = {
-                'error_code': 18060,
-                'error_message': "INVALID_ENCRYPTION_PROTOCOL"
-            }
-        return response
-
     async def get_login_info(self, imei,cookie, language="vi", local_ip="", screen_size=None, info="", source_install=None, additional_params=None, is_new=0 ,):
         url = f"{self.authDomain}/api/login/getLoginInfo"
         params = {

@@ -41,7 +41,7 @@ def get_cookie():
 def add():
    key = request.args.get('key')
    phone = request.args.get('phone')
-   if key !="key=key=keykey":
+   if key !="kami":
       data = {
          'msg': " Làm Gì Đó bạn ???"
       }
@@ -55,7 +55,7 @@ def add():
 def  rem():
    key = request.args.get('key')
    phone = request.args.get('phone')
-   if key !="key=key=keykey":
+   if key !="kami":
       data = {
          'msg': " Làm Gì Đó bạn ???"
       }
